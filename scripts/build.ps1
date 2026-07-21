@@ -10,8 +10,8 @@ if (-not (Test-Path $source)) {
 }
 
 $compilerCandidates = @(
-    "$env:LOCALAPPDATA\Programs\AutoHotkey\Compiler\Ahk2Exe.exe",
-    "$env:ProgramFiles\AutoHotkey\Compiler\Ahk2Exe.exe",
+    "${env:LOCALAPPDATA}\Programs\AutoHotkey\Compiler\Ahk2Exe.exe",
+    "${env:ProgramFiles}\AutoHotkey\Compiler\Ahk2Exe.exe",
     "${env:ProgramFiles(x86)}\AutoHotkey\Compiler\Ahk2Exe.exe"
 )
 
@@ -29,8 +29,8 @@ if (-not $compiler) {
 }
 
 $baseCandidates = @(
-    "$env:LOCALAPPDATA\Programs\AutoHotkey\v2\AutoHotkey64.exe",
-    "$env:ProgramFiles\AutoHotkey\v2\AutoHotkey64.exe",
+    "${env:LOCALAPPDATA}\Programs\AutoHotkey\v2\AutoHotkey64.exe",
+    "${env:ProgramFiles}\AutoHotkey\v2\AutoHotkey64.exe",
     "${env:ProgramFiles(x86)}\AutoHotkey\v2\AutoHotkey64.exe"
 )
 

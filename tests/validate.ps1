@@ -4,6 +4,8 @@ $root = Split-Path -Parent $PSScriptRoot
 $scriptPath = Join-Path $root "PeekDock.ahk"
 $readmePath = Join-Path $root "README.md"
 $buildPath = Join-Path $root "scripts\build.ps1"
+$buildInstallerPath = Join-Path $root "scripts\build-installer.ps1"
+$installPath = Join-Path $root "scripts\install.ps1"
 $troubleshootingPath = Join-Path $root "docs\troubleshooting.md"
 $configExamplePath = Join-Path $root "config.example.ini"
 
@@ -31,7 +33,7 @@ function Assert-NotContains {
     }
 }
 
-foreach ($path in @($scriptPath, $readmePath, $buildPath, $troubleshootingPath, $configExamplePath)) {
+foreach ($path in @($scriptPath, $readmePath, $buildPath, $buildInstallerPath, $installPath, $troubleshootingPath, $configExamplePath)) {
     if (-not (Test-Path $path)) {
         throw "Missing $path"
     }
@@ -40,6 +42,8 @@ foreach ($path in @($scriptPath, $readmePath, $buildPath, $troubleshootingPath, 
 $script = Get-Content -Raw -Encoding UTF8 $scriptPath
 $readme = Get-Content -Raw -Encoding UTF8 $readmePath
 $build = Get-Content -Raw -Encoding UTF8 $buildPath
+$buildInstaller = Get-Content -Raw -Encoding UTF8 $buildInstallerPath
+$install = Get-Content -Raw -Encoding UTF8 $installPath
 $troubleshooting = Get-Content -Raw -Encoding UTF8 $troubleshootingPath
 $configExample = Get-Content -Raw -Encoding UTF8 $configExamplePath
 $chineseSupplementHeading = "## " + [string][char]0x4E2D + [string][char]0x6587 + [string][char]0x8865 + [string][char]0x5145
@@ -99,6 +103,7 @@ Assert-Contains $readme '## Default Hotkeys' "README should document default hot
 Assert-Contains $readme 'Ctrl \+ Alt \+ Shift \+ B' "README should document bind hotkey"
 Assert-Contains $readme 'Ctrl \+ Alt \+ T' "README should document topmost hotkey"
 Assert-Contains $readme '## Build an exe' "README should explain exe packaging"
+Assert-Contains $readme '## Build a one-click installer' "README should explain one-click installer packaging"
 Assert-Contains $readme ([regex]::Escape($chineseSupplementHeading)) "README should include concise Chinese supplement"
 Assert-Contains $readme '## Privacy' "README should include privacy notes"
 Assert-Contains $readme '## License' "README should include license"
@@ -141,6 +146,12 @@ Assert-Contains $build 'dist' "Build script should write to dist"
 Assert-Contains $build 'PeekDock.exe' "Build script should produce PeekDock.exe"
 Assert-NotContains $build 'config\.ini' "Build script should not bundle local config.ini"
 Assert-NotContains $build 'browser-profile' "Build script should not bundle browser profile data"
+
+Assert-Contains $buildInstaller 'PeekDock-Setup.exe' "Installer build script should produce PeekDock-Setup.exe"
+Assert-Contains $buildInstaller 'iexpress.exe' "Installer build script should use the Windows IExpress packager"
+Assert-Contains $install 'AutoHotkey.AutoHotkey' "Installer should install AutoHotkey v2 when missing"
+Assert-Contains $install 'Google.Chrome' "Installer should install Chrome when missing"
+Assert-Contains $install 'DesktopDirectory' "Installer should create a Desktop shortcut"
 
 $ahkCandidates = @(
     "$env:LOCALAPPDATA\Programs\AutoHotkey\v2\AutoHotkey64.exe",

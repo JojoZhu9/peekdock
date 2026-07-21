@@ -37,9 +37,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1
 
 The executable is written to `dist\PeekDock.exe`. The compiled app still requires Chrome to be installed.
 
+## Build a one-click installer
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-installer.ps1
+```
+
+The installer is written to `dist\PeekDock-Setup.exe`. It installs the bundled PeekDock script to `%LOCALAPPDATA%\PeekDock`, checks for Chrome and AutoHotkey v2, installs missing dependencies with winget when available, creates Desktop and Start Menu shortcuts, and starts PeekDock.
+
 ## 中文补充
 
-PeekDock 是一个轻量级 Windows 小工具，用来把当前 Chrome 页面绑定成独立小窗口。你可以在设置窗口里绑定页面、修改快捷键、切换置顶，并通过 `Start with Windows` 设置开机启动。打包后的 `PeekDock.exe` 不需要用户额外安装 AutoHotkey，但电脑上仍然需要安装 Chrome。
+PeekDock 是一个轻量级 Windows 小工具，用来把当前 Chrome 页面绑定成独立小窗口。你可以在设置窗口里绑定页面、修改快捷键、切换置顶，并通过 `Start with Windows` 设置开机启动。`PeekDock-Setup.exe` 是一键安装器，会检查并安装需要的 Chrome 和 AutoHotkey v2 环境。
 
 ## Privacy
 

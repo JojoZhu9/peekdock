@@ -2,6 +2,8 @@
 config.ini
 browser-profile/
 .worktrees/
+dist/
+tools/
 
 # AutoHotkey generated artifacts
 *.exe
