@@ -13,7 +13,6 @@ DetectHiddenWindows True
 
 global AppName := "PeekDock"
 global ConfigFile := A_ScriptDir "\config.ini"
-global ProfileDir := A_ScriptDir "\browser-profile"
 global TopMost := IniRead(ConfigFile, "Window", "TopMost", "1") = "1"
 global AppWindowHwnd := Integer(IniRead(ConfigFile, "Runtime", "Hwnd", "0"))
 global DefaultHotkeys := Map(
@@ -343,17 +342,11 @@ ToggleWindow(*) {
         return
     }
 
-    url := IniRead(ConfigFile, "Target", "Url", "")
-    if !url {
-        MsgBox(
-            "No page is bound yet.`n`n"
-            . "Open the target page in Chrome, resize and position it, then bind the page.",
-            AppName
-        )
-        return
-    }
-
-    LaunchAppWindow(url)
+    MsgBox(
+        "No bound Chrome window is available.`n`n"
+        . "Open the page you want to keep, resize and position it, then bind it again.",
+        AppName
+    )
 }
 
 BindActiveBrowserUrl(activateChrome := false, *) {
@@ -379,6 +372,7 @@ BindActiveBrowserUrl(activateChrome := false, *) {
         return
     }
 
+    boundHwnd := WinGetID("A")
     oldClipboard := ClipboardAll()
     A_Clipboard := ""
 
@@ -402,10 +396,11 @@ BindActiveBrowserUrl(activateChrome := false, *) {
     }
 
     IniWrite url, ConfigFile, "Target", "Url"
+    RememberAppWindow(boundHwnd)
     RefreshMainGui()
     MsgBox(
         "Bound page:`n`n" url "`n`n"
-        . "Use " FormatHotkeyLabel(ConfiguredHotkeys["ToggleDock"]) " to open or hide the dock.",
+        . "Use " FormatHotkeyLabel(ConfiguredHotkeys["ToggleDock"]) " to hide or restore this same Chrome window.",
         AppName
     )
 }
@@ -445,41 +440,6 @@ ToggleAlwaysOnTop(*) {
     MsgBox("Always-on-top: " (TopMost ? "On" : "Off"), AppName)
 }
 
-LaunchAppWindow(url) {
-    global AppName, ProfileDir
-
-    DirCreate ProfileDir
-
-    chromePath := FindChromePath()
-    if !chromePath {
-        MsgBox("Chrome cannot be found. Install Google Chrome, then try again.", AppName)
-        return
-    }
-
-    safeUrl := StrReplace(url, '"', "%22")
-    command := '"' chromePath '" --user-data-dir="' ProfileDir '" --app="' safeUrl '"'
-    existingWindows := GetChromeWindowSnapshot()
-
-    try {
-        Run(command,,, &pid)
-    } catch as err {
-        MsgBox("Chrome could not be started:`n`n" err.Message, AppName)
-        return
-    }
-
-    hwnd := WaitForAppWindow(pid, existingWindows, 8)
-    if hwnd {
-        RememberAppWindow(hwnd)
-        RestoreAppWindow(hwnd)
-    } else {
-        MsgBox(
-            "Chrome started, but PeekDock could not find the app window yet.`n`n"
-            . "Wait a moment, then use the dock hotkey again.",
-            AppName
-        )
-    }
-}
-
 RestoreAppWindow(hwnd) {
     global TopMost
 
@@ -487,50 +447,6 @@ RestoreAppWindow(hwnd) {
     WinRestore("ahk_id " hwnd)
     WinSetAlwaysOnTop(TopMost ? 1 : 0, "ahk_id " hwnd)
     WinActivate("ahk_id " hwnd)
-}
-
-WaitForAppWindow(pid, existingWindows, seconds) {
-    deadline := A_TickCount + seconds * 1000
-
-    while A_TickCount < deadline {
-        hwnd := FindNewChromeWindow(existingWindows)
-        if hwnd {
-            return hwnd
-        }
-
-        hwnd := FindChromeWindowByPid(pid)
-        if hwnd {
-            return hwnd
-        }
-        Sleep 150
-    }
-
-    return 0
-}
-
-GetChromeWindowSnapshot() {
-    snapshot := Map()
-    for hwnd in WinGetList("ahk_exe chrome.exe") {
-        snapshot[hwnd] := true
-    }
-    return snapshot
-}
-
-FindNewChromeWindow(existingWindows) {
-    for hwnd in WinGetList("ahk_exe chrome.exe") {
-        if existingWindows.Has(hwnd) {
-            continue
-        }
-        try {
-            title := WinGetTitle("ahk_id " hwnd)
-            className := WinGetClass("ahk_id " hwnd)
-            if title && className = "Chrome_WidgetWin_1" {
-                return hwnd
-            }
-        }
-    }
-
-    return 0
 }
 
 FindAppWindow() {
@@ -549,24 +465,6 @@ FindAppWindow() {
     return 0
 }
 
-FindChromeWindowByPid(pid) {
-    if !pid {
-        return 0
-    }
-
-    for hwnd in WinGetList("ahk_pid " pid) {
-        try {
-            title := WinGetTitle("ahk_id " hwnd)
-            className := WinGetClass("ahk_id " hwnd)
-            if title && className = "Chrome_WidgetWin_1" {
-                return hwnd
-            }
-        }
-    }
-
-    return 0
-}
-
 RememberAppWindow(hwnd) {
     global AppWindowHwnd, ConfigFile
 
@@ -580,28 +478,4 @@ IsWindowVisible(hwnd) {
 
 IsSupportedUrl(value) {
     return RegExMatch(value, "i)^(https?://|file://|chrome-extension://)")
-}
-
-FindChromePath() {
-    localAppData := EnvGet("LOCALAPPDATA")
-    candidates := [
-        A_ProgramFiles "\Google\Chrome\Application\chrome.exe",
-        A_ProgramFiles " (x86)\Google\Chrome\Application\chrome.exe",
-        localAppData "\Google\Chrome\Application\chrome.exe"
-    ]
-
-    for path in candidates {
-        if FileExist(path) {
-            return path
-        }
-    }
-
-    try {
-        pathFromShell := RegRead("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe", "")
-        if pathFromShell && FileExist(pathFromShell) {
-            return pathFromShell
-        }
-    }
-
-    return ""
 }

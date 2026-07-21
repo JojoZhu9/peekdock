@@ -1,11 +1,11 @@
 # PeekDock
 
-PeekDock is a lightweight Windows utility that turns one Chrome page into a dedicated dock window. It can bind the URL from your active Chrome tab, open it as a Chrome app window, and show or hide that window without disturbing your normal browser windows.
+PeekDock is a lightweight Windows utility that turns one existing Chrome window into a quick hide/restore dock. It binds the active Chrome tab and preserves that same window, page state, playback position, and form state.
 
 ## Features
 
 - Bind the current Chrome tab instead of hard-coding a URL.
-- Show, hide, and restore one dedicated Chrome app window.
+- Show, hide, and restore the original bound Chrome window.
 - Keep the page state alive by hiding instead of closing.
 - Configure hotkeys from a small native settings window.
 - Toggle always-on-top.
@@ -47,7 +47,7 @@ The installer is written to `dist\PeekDock-Setup.exe`. It installs the bundled P
 
 ## 中文补充
 
-PeekDock 是一个轻量级 Windows 小工具，用来把当前 Chrome 页面绑定成独立小窗口。你可以在设置窗口里绑定页面、修改快捷键、切换置顶，并通过 `Start with Windows` 设置开机启动。`PeekDock-Setup.exe` 是一键安装器，会检查并安装需要的 Chrome 和 AutoHotkey v2 环境。
+PeekDock 是一个轻量级 Windows 小工具，用来把当前已经打开的 Chrome 窗口绑定成可快速隐藏/恢复的小窗。它会保留原页面、播放进度和输入状态，不会再复制打开一个新的 Chrome 页面。`PeekDock-Setup.exe` 是一键安装器，会检查并安装需要的 Chrome 和 AutoHotkey v2 环境。
 
 ## Privacy
 

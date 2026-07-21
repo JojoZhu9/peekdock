@@ -6,7 +6,7 @@ Open the PeekDock settings window from the tray and confirm the dock hotkey fiel
 
 ## Binding fails
 
-Activate a normal Chrome tab first, then click `Bind Current Chrome Tab` or use the bind hotkey. PeekDock supports Chrome; private browser windows, non-Chrome browsers, or Chrome pages that block copying the address may not bind correctly.
+Activate a normal Chrome tab first, then click `Bind Current Chrome Tab` or use the bind hotkey. PeekDock binds the current Chrome window itself; it does not create a duplicate app window.
 
 ## The exe does not start
 
