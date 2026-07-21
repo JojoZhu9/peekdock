@@ -2,6 +2,12 @@
 
 All notable changes to PeekDock are documented here.
 
+## 0.1.2 - 2026-07-21
+
+- Bundle the AutoHotkey v2 runtime in the one-click installer.
+- Stop installing AutoHotkey during setup, avoiding machine-specific install path failures.
+- Keep Chrome as the only external browser requirement.
+
 ## 0.1.0 - 2026-07-21
 
 - Initial AutoHotkey v2 release.

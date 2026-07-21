@@ -5,8 +5,11 @@ $sourceDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $installDir = Join-Path $env:LOCALAPPDATA $appName
 $scriptSource = Join-Path $sourceDir "PeekDock.ahk"
 $iconSource = Join-Path $sourceDir "peekdock.ico"
+$runtimeSource = Join-Path $sourceDir "AutoHotkey64.exe"
 $scriptTarget = Join-Path $installDir "PeekDock.ahk"
 $iconTarget = Join-Path $installDir "peekdock.ico"
+$runtimeDir = Join-Path $installDir "runtime"
+$runtimeTarget = Join-Path $runtimeDir "AutoHotkey64.exe"
 
 function Show-Message {
     param(
@@ -44,6 +47,7 @@ function Find-Chrome {
 
 function Find-AutoHotkey {
     $paths = @(
+        $runtimeTarget,
         "${env:LOCALAPPDATA}\Programs\AutoHotkey\v2\AutoHotkey64.exe",
         "${env:ProgramFiles}\AutoHotkey\v2\AutoHotkey64.exe",
         "${env:ProgramFiles(x86)}\AutoHotkey\v2\AutoHotkey64.exe"
@@ -52,6 +56,36 @@ function Find-AutoHotkey {
     foreach ($path in $paths) {
         if ($path -and (Test-Path $path)) {
             return $path
+        }
+    }
+
+    return $null
+}
+
+function Find-AutoHotkeyFromRegistry {
+    $registryKeys = @(
+        "HKCU:\SOFTWARE\AutoHotkey",
+        "HKLM:\SOFTWARE\AutoHotkey",
+        "HKLM:\SOFTWARE\WOW6432Node\AutoHotkey"
+    )
+
+    foreach ($key in $registryKeys) {
+        if (-not (Test-Path $key)) {
+            continue
+        }
+
+        $installDirValue = (Get-ItemProperty $key -ErrorAction SilentlyContinue).InstallDir
+        if (-not $installDirValue) {
+            continue
+        }
+
+        foreach ($candidate in @(
+            (Join-Path $installDirValue "v2\AutoHotkey64.exe"),
+            (Join-Path $installDirValue "AutoHotkey64.exe")
+        )) {
+            if (Test-Path $candidate) {
+                return $candidate
+            }
         }
     }
 
@@ -80,41 +114,13 @@ function Install-WingetPackage {
     return $true
 }
 
-function Install-AutoHotkeyDirect {
-    $downloadDir = Join-Path $env:TEMP "PeekDockSetup"
-    New-Item -ItemType Directory -Force -Path $downloadDir | Out-Null
-
-    $release = Invoke-RestMethod `
-        -Uri "https://api.github.com/repos/AutoHotkey/AutoHotkey/releases/latest" `
-        -Headers @{ "User-Agent" = "PeekDock-Setup" }
-
-    $asset = $release.assets |
-        Where-Object { $_.name -match '^AutoHotkey_.*_setup\.exe$' } |
-        Select-Object -First 1
-
-    if (-not $asset) {
-        throw "AutoHotkey v2 setup could not be found in the official GitHub release."
-    }
-
-    $installer = Join-Path $downloadDir $asset.name
-    Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $installer
-
-    $process = Start-Process `
-        -FilePath $installer `
-        -ArgumentList "/silent", "/user" `
-        -Wait `
-        -PassThru
-
-    if ($process.ExitCode -ne 0) {
-        throw "AutoHotkey v2 direct installer failed. Exit code: $($process.ExitCode)"
-    }
-
-    return $true
-}
-
 try {
     if (-not (Test-Path $scriptSource)) {
         throw "Installer payload is missing PeekDock.ahk."
+    }
+
+    if (-not (Test-Path $runtimeSource)) {
+        throw "Installer payload is missing AutoHotkey64.exe."
     }
 
     if (-not (Find-Chrome)) {
@@ -123,19 +129,19 @@ try {
         }
     }
 
+    New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+    New-Item -ItemType Directory -Force -Path $runtimeDir | Out-Null
+    Copy-Item -LiteralPath $runtimeSource -Destination $runtimeTarget -Force
+
     $ahk = Find-AutoHotkey
     if (-not $ahk) {
-        if (-not (Install-WingetPackage -Id "AutoHotkey.AutoHotkey" -Name "AutoHotkey v2")) {
-            Install-AutoHotkeyDirect
-        }
-        $ahk = Find-AutoHotkey
+        $ahk = Find-AutoHotkeyFromRegistry
     }
 
     if (-not $ahk) {
-        throw "AutoHotkey v2 was installed, but AutoHotkey64.exe could not be found."
+        throw "AutoHotkey64.exe could not be found in the bundled runtime."
     }
 
-    New-Item -ItemType Directory -Force -Path $installDir | Out-Null
     Copy-Item -LiteralPath $scriptSource -Destination $scriptTarget -Force
     if (Test-Path $iconSource) {
         Copy-Item -LiteralPath $iconSource -Destination $iconTarget -Force

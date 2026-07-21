@@ -1,7 +1,7 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 
-; PeekDock controls one dedicated Chrome app window.
+; PeekDock controls one bound Chrome window.
 ; Default hotkeys:
 ;   Middle mouse             show / hide / restore the dock
 ;   Ctrl + Alt + Shift + B   bind the active Chrome tab URL

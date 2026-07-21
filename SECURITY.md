@@ -15,6 +15,6 @@ Do not include personal URLs, cookies, exported Chrome profiles, or screenshots 
 PeekDock stores runtime data locally:
 
 - `config.ini` stores the bound URL, always-on-top setting, and window handle.
-- `browser-profile/` stores the dedicated Chrome profile created by Chrome.
+- `%LOCALAPPDATA%\PeekDock\runtime\` stores the bundled AutoHotkey runtime installed by the one-click setup.
 
-Both paths are ignored by Git.
+Local settings and build outputs are ignored by Git.

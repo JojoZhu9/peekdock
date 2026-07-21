@@ -8,9 +8,19 @@ $payload = Join-Path $buildRoot "payload"
 $sed = Join-Path $buildRoot "PeekDock-Setup.sed"
 $tempOutput = Join-Path $buildRoot "PeekDock-Setup.exe"
 $iexpress = Join-Path $env:SystemRoot "system32\iexpress.exe"
+$runtimeCandidates = @(
+    "${env:LOCALAPPDATA}\Programs\AutoHotkey\v2\AutoHotkey64.exe",
+    "${env:ProgramFiles}\AutoHotkey\v2\AutoHotkey64.exe",
+    "${env:ProgramFiles(x86)}\AutoHotkey\v2\AutoHotkey64.exe"
+)
 
 if (-not (Test-Path $iexpress)) {
     throw "iexpress.exe was not found on this Windows installation."
+}
+
+$runtime = $runtimeCandidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+if (-not $runtime) {
+    throw "AutoHotkey v2 runtime was not found. Install AutoHotkey v2 before building PeekDock-Setup.exe."
 }
 
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
@@ -23,6 +33,7 @@ New-Item -ItemType Directory -Force -Path $payload | Out-Null
 Copy-Item -LiteralPath (Join-Path $root "PeekDock.ahk") -Destination (Join-Path $payload "PeekDock.ahk") -Force
 Copy-Item -LiteralPath (Join-Path $root "scripts\install.ps1") -Destination (Join-Path $payload "install.ps1") -Force
 Copy-Item -LiteralPath (Join-Path $root "assets\peekdock.ico") -Destination (Join-Path $payload "peekdock.ico") -Force
+Copy-Item -LiteralPath $runtime -Destination (Join-Path $payload "AutoHotkey64.exe") -Force
 
 $sedContent = @"
 [Version]
@@ -53,10 +64,12 @@ SourceFiles0=$payload\
 %FILE0%=PeekDock.ahk
 %FILE1%=install.ps1
 %FILE2%=peekdock.ico
+%FILE3%=AutoHotkey64.exe
 [Strings]
 FILE0="PeekDock.ahk"
 FILE1="install.ps1"
 FILE2="peekdock.ico"
+FILE3="AutoHotkey64.exe"
 "@
 
 Set-Content -LiteralPath $sed -Value $sedContent -Encoding ASCII

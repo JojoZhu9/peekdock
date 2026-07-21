@@ -26,5 +26,4 @@ Toggle `Start with Windows` off and on again. PeekDock creates a shortcut in the
 
 1. Exit PeekDock from the tray menu.
 2. Delete `config.ini`.
-3. Delete `browser-profile/` if you also want to reset the dedicated Chrome login/session.
-4. Start `PeekDock.ahk` or `dist\PeekDock.exe` again.
+3. Start `PeekDock.ahk` or `dist\PeekDock.exe` again.

@@ -48,15 +48,15 @@ The executable is written to `dist\PeekDock.exe`. The compiled app still require
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-installer.ps1
 ```
 
-The installer is written to `dist\PeekDock-Setup.exe`. It installs the bundled PeekDock script to `%LOCALAPPDATA%\PeekDock`, checks for Chrome and AutoHotkey v2, installs missing dependencies with winget when available, falls back to the official AutoHotkey GitHub installer if winget cannot install AutoHotkey, creates Desktop and Start Menu shortcuts, and starts PeekDock.
+The installer is written to `dist\PeekDock-Setup.exe`. It installs PeekDock to `%LOCALAPPDATA%\PeekDock`, bundles the AutoHotkey v2 runtime, checks for Chrome, tries to install Chrome with winget if it is missing, creates Desktop and Start Menu shortcuts, and starts PeekDock.
 
 ## 中文补充
 
-PeekDock 是一个轻量级 Windows 小工具，用来把当前已经打开的 Chrome 窗口绑定成可快速隐藏/恢复的小窗。它会保留原页面、播放进度和输入状态，不会再复制打开一个新的 Chrome 页面。`PeekDock-Setup.exe` 是一键安装器，会检查并安装需要的 Chrome 和 AutoHotkey v2 环境。
+PeekDock 是一个轻量级 Windows 小工具，用来把当前已经打开的 Chrome 窗口绑定成可快速隐藏/恢复的小窗。它会保留原页面、播放进度和输入状态，不会再复制打开一个新的 Chrome 页面。`PeekDock-Setup.exe` 会内置 AutoHotkey v2 运行时，用户不需要单独安装 AutoHotkey；电脑上仍然需要 Chrome，如果缺少 Chrome，安装器会优先尝试用 winget 安装。
 
 ## Privacy
 
-PeekDock stores the bound URL, hotkeys, startup preference, and runtime window handle in local `config.ini`. The dedicated Chrome profile lives in `browser-profile/`. Both are excluded from Git.
+PeekDock stores the bound URL, hotkeys, startup preference, and runtime window handle in local `config.ini`. Local runtime files are installed under `%LOCALAPPDATA%\PeekDock`. User settings and build outputs are excluded from Git.
 
 ## License
 
