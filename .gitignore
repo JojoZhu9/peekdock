@@ -1,6 +1,7 @@
 # Local runtime state
 config.ini
 browser-profile/
+.worktrees/
 
 # AutoHotkey generated artifacts
 *.exe
