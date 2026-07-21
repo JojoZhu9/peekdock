@@ -48,7 +48,7 @@ The executable is written to `dist\PeekDock.exe`. The compiled app still require
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-installer.ps1
 ```
 
-The installer is written to `dist\PeekDock-Setup.exe`. It installs the bundled PeekDock script to `%LOCALAPPDATA%\PeekDock`, checks for Chrome and AutoHotkey v2, installs missing dependencies with winget when available, creates Desktop and Start Menu shortcuts, and starts PeekDock.
+The installer is written to `dist\PeekDock-Setup.exe`. It installs the bundled PeekDock script to `%LOCALAPPDATA%\PeekDock`, checks for Chrome and AutoHotkey v2, installs missing dependencies with winget when available, falls back to the official AutoHotkey GitHub installer if winget cannot install AutoHotkey, creates Desktop and Start Menu shortcuts, and starts PeekDock.
 
 ## 中文补充
 

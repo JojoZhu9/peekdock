@@ -66,14 +66,50 @@ function Install-WingetPackage {
 
     $winget = Get-Command winget.exe -ErrorAction SilentlyContinue
     if (-not $winget) {
-        throw "winget.exe was not found. Install $Name manually, then run PeekDock setup again."
+        Write-Host "winget.exe was not found."
+        return $false
     }
 
     Write-Host "Installing $Name..."
     & $winget.Source install --id $Id --exact --silent --accept-source-agreements --accept-package-agreements
     if ($LASTEXITCODE -ne 0) {
-        throw "winget could not install $Name. Exit code: $LASTEXITCODE"
+        Write-Host "winget could not install $Name. Exit code: $LASTEXITCODE"
+        return $false
     }
+
+    return $true
+}
+
+function Install-AutoHotkeyDirect {
+    $downloadDir = Join-Path $env:TEMP "PeekDockSetup"
+    New-Item -ItemType Directory -Force -Path $downloadDir | Out-Null
+
+    $release = Invoke-RestMethod `
+        -Uri "https://api.github.com/repos/AutoHotkey/AutoHotkey/releases/latest" `
+        -Headers @{ "User-Agent" = "PeekDock-Setup" }
+
+    $asset = $release.assets |
+        Where-Object { $_.name -match '^AutoHotkey_.*_setup\.exe$' } |
+        Select-Object -First 1
+
+    if (-not $asset) {
+        throw "AutoHotkey v2 setup could not be found in the official GitHub release."
+    }
+
+    $installer = Join-Path $downloadDir $asset.name
+    Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $installer
+
+    $process = Start-Process `
+        -FilePath $installer `
+        -ArgumentList "/silent", "/user" `
+        -Wait `
+        -PassThru
+
+    if ($process.ExitCode -ne 0) {
+        throw "AutoHotkey v2 direct installer failed. Exit code: $($process.ExitCode)"
+    }
+
+    return $true
 }
 
 try {
@@ -82,12 +118,16 @@ try {
     }
 
     if (-not (Find-Chrome)) {
-        Install-WingetPackage -Id "Google.Chrome" -Name "Google Chrome"
+        if (-not (Install-WingetPackage -Id "Google.Chrome" -Name "Google Chrome")) {
+            throw "Chrome is required, but winget could not install it. Install Chrome manually, then run PeekDock setup again."
+        }
     }
 
     $ahk = Find-AutoHotkey
     if (-not $ahk) {
-        Install-WingetPackage -Id "AutoHotkey.AutoHotkey" -Name "AutoHotkey v2"
+        if (-not (Install-WingetPackage -Id "AutoHotkey.AutoHotkey" -Name "AutoHotkey v2")) {
+            Install-AutoHotkeyDirect
+        }
         $ahk = Find-AutoHotkey
     }
 
