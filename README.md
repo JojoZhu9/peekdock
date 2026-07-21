@@ -1,108 +1,49 @@
 # PeekDock
 
-![Platform](https://img.shields.io/badge/platform-Windows-0078D4)
-![AutoHotkey](https://img.shields.io/badge/AutoHotkey-v2-334455)
-![License](https://img.shields.io/badge/license-MIT-green)
+PeekDock is a lightweight Windows utility that turns one Chrome page into a dedicated dock window. It can bind the URL from your active Chrome tab, open it as a Chrome app window, and show or hide that window without disturbing your normal browser windows.
 
-PeekDock 是一个基于 AutoHotkey v2 的 Chrome 专用网页小窗工具。它把你选定的网页变成一个独立 Chrome 应用窗口，并用鼠标中键快速打开、隐藏或恢复，不影响其他浏览器窗口。
+## Features
 
-## 适合什么场景
+- Bind the current Chrome tab instead of hard-coding a URL.
+- Show, hide, and restore one dedicated Chrome app window.
+- Keep the page state alive by hiding instead of closing.
+- Configure hotkeys from a small native settings window.
+- Toggle always-on-top.
+- Start with Windows.
+- Build a standalone exe with AutoHotkey v2.
 
-- 常驻一个网页工具、视频页、仪表盘或聊天页。
-- 希望网页保持登录状态、播放状态和输入状态。
-- 想用一个轻量快捷键控制小窗，而不是在多个浏览器窗口里找标签页。
+## Quick Start
 
-## 功能
+1. Install AutoHotkey v2 if you want to run from source.
+2. Run `PeekDock.ahk`, or run `dist\PeekDock.exe` after building.
+3. Open the target page in Chrome.
+4. Resize and position the Chrome window the way you want.
+5. Click `Bind Current Chrome Tab`.
+6. Use the configured dock hotkey, or click `Show / Hide Dock`, to show or hide PeekDock.
 
-- 使用 Chrome `--app` 模式打开独立网页窗口。
-- 使用独立 `browser-profile/` 配置目录，和普通 Chrome 会话隔离。
-- 绑定当前 Chrome 标签页 URL，不需要在脚本里写死网址。
-- 鼠标中键打开、隐藏或恢复小窗。
-- 恢复时保持你上次调整过的窗口大小和位置。
-- 可切换始终置顶。
+## Default Hotkeys
 
-## 安装要求
-
-- Windows
-- Google Chrome
-- [AutoHotkey v2](https://www.autohotkey.com/)
-
-## 下载
-
-当前项目是单文件脚本工具。下载仓库后直接运行 `PeekDock.ahk` 即可。
-
-```powershell
-git clone https://github.com/JojoZhu9/peekdock.git
-cd peekdock
-```
-
-## 快速开始
-
-1. 安装 AutoHotkey v2。
-2. 双击运行 `PeekDock.ahk`。
-3. 在普通 Chrome 窗口中打开目标网页。
-4. 先把 Chrome 窗口调整到你想要的位置和大小。
-5. 按 `Ctrl + Alt + Shift + B` 绑定当前标签页。
-6. 按鼠标中键打开、隐藏或恢复 PeekDock。
-
-## 快捷键
-
-| 快捷键 | 功能 |
+| Action | Default |
 | --- | --- |
-| 鼠标中键 | 打开 / 隐藏 / 恢复小窗 |
-| `Ctrl + Alt + Shift + B` | 绑定当前 Chrome 标签页 URL |
-| `Ctrl + Alt + T` | 切换小窗始终置顶 |
+| Show / hide / restore dock | Middle mouse button |
+| Bind current Chrome tab | `Ctrl + Alt + Shift + B` |
+| Toggle always-on-top | `Ctrl + Alt + T` |
 
-## 项目文件
-
-| 文件 | 用途 |
-| --- | --- |
-| `PeekDock.ahk` | 主脚本 |
-| `tests/validate.ps1` | 静态校验脚本 |
-| `config.ini` | 本地运行配置，自动生成，不应提交 |
-| `browser-profile/` | 独立 Chrome 用户配置，自动生成，不应提交 |
-
-## 验证
+## Build an exe
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\validate.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1
 ```
 
-如果本机已安装 AutoHotkey v2，也可以运行：
+The executable is written to `dist\PeekDock.exe`. The compiled app still requires Chrome to be installed.
 
-```powershell
-& "$env:LOCALAPPDATA\Programs\AutoHotkey\v2\AutoHotkey64.exe" /ErrorStdOut /Validate .\PeekDock.ahk
-```
+## 中文补充
 
-## 开机自启
+PeekDock 是一个轻量级 Windows 小工具，用来把当前 Chrome 页面绑定成独立小窗口。你可以在设置窗口里绑定页面、修改快捷键、切换置顶，并通过 `Start with Windows` 设置开机启动。打包后的 `PeekDock.exe` 不需要用户额外安装 AutoHotkey，但电脑上仍然需要安装 Chrome。
 
-按 `Win + R`，输入：
+## Privacy
 
-```text
-shell:startup
-```
-
-把 `PeekDock.ahk` 的快捷方式放进去即可。
-
-## 常见问题
-
-### 鼠标中键没有反应
-
-确认 `PeekDock.ahk` 正在运行。AutoHotkey 脚本运行后，Windows 托盘区域会出现 AutoHotkey 图标。
-
-### 绑定错页面了怎么办
-
-打开新的目标页面，重新按 `Ctrl + Alt + Shift + B` 绑定即可。
-
-### 想恢复默认状态怎么办
-
-退出脚本后删除本地 `config.ini`，再重新运行 `PeekDock.ahk`。
-
-更多排查见 [Troubleshooting](docs/troubleshooting.md)。
-
-## 隐私说明
-
-PeekDock 只把绑定 URL、置顶状态和窗口句柄写入本地 `config.ini`。仓库的 `.gitignore` 会排除 `config.ini` 和 `browser-profile/`，避免把个人网页地址、登录状态或浏览器配置提交到 GitHub。
+PeekDock stores the bound URL, hotkeys, startup preference, and runtime window handle in local `config.ini`. The dedicated Chrome profile lives in `browser-profile/`. Both are excluded from Git.
 
 ## License
 

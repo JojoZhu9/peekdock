@@ -1,24 +1,30 @@
 # Troubleshooting
 
-## PeekDock starts, but the middle mouse button does nothing
+## The dock hotkey does nothing
 
-Check that `PeekDock.ahk` is running. If another application captures the middle mouse button globally, close that application or change PeekDock's `MButton::ToggleWindow()` hotkey in `PeekDock.ahk`.
+Open the PeekDock settings window from the tray and confirm the dock hotkey field uses valid AutoHotkey v2 syntax. If another app captures the same global hotkey, choose a different dock hotkey and save settings.
 
-## The dock opens the wrong page
+## Binding fails
 
-Open the desired page in a normal Chrome window and press `Ctrl + Alt + Shift + B` again.
+Activate a normal Chrome tab first, then click `Bind Current Chrome Tab` or use the bind hotkey. PeekDock supports Chrome; private browser windows, non-Chrome browsers, or Chrome pages that block copying the address may not bind correctly.
 
-## The app window cannot be found after Chrome starts
+## The exe does not start
 
-Wait a few seconds and press the middle mouse button again. PeekDock records the app window handle after launch, but Chrome can occasionally take longer to create the visible window.
+Build again with AutoHotkey v2 installed:
 
-## The window size or position is wrong
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1
+```
 
-PeekDock does not force a size when restoring the window. Resize and move the Chrome app window manually; subsequent hide/restore actions keep that state.
+The compiled app still requires Chrome to be installed. If Windows blocks the exe after download or transfer, unblock it from the file properties dialog and try again.
+
+## Start with Windows does not work
+
+Toggle `Start with Windows` off and on again. PeekDock creates a shortcut in the current user's Startup folder and does not require administrator permissions.
 
 ## Reset everything
 
-1. Exit PeekDock from the AutoHotkey tray icon.
+1. Exit PeekDock from the tray menu.
 2. Delete `config.ini`.
 3. Delete `browser-profile/` if you also want to reset the dedicated Chrome login/session.
-4. Start `PeekDock.ahk` again.
+4. Start `PeekDock.ahk` or `dist\PeekDock.exe` again.

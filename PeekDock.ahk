@@ -2,10 +2,10 @@
 #SingleInstance Force
 
 ; PeekDock controls one dedicated Chrome app window.
-; Hotkeys:
-;   Ctrl+Alt+Shift+B  bind the active Chrome tab URL
-;   Middle mouse      show/hide/open the bound app window
-;   Ctrl+Alt+T        toggle always-on-top
+; Default hotkeys:
+;   Middle mouse             show / hide / restore the dock
+;   Ctrl + Alt + Shift + B   bind the active Chrome tab URL
+;   Ctrl + Alt + T           toggle always-on-top
 
 Persistent
 SetTitleMatchMode 2
@@ -16,27 +16,229 @@ global ConfigFile := A_ScriptDir "\config.ini"
 global ProfileDir := A_ScriptDir "\browser-profile"
 global TopMost := IniRead(ConfigFile, "Window", "TopMost", "1") = "1"
 global AppWindowHwnd := Integer(IniRead(ConfigFile, "Runtime", "Hwnd", "0"))
+global DefaultHotkeys := Map(
+    "ToggleDock", "MButton",
+    "BindPage", "^!+b",
+    "ToggleTopMost", "^!t"
+)
+global ConfiguredHotkeys := LoadHotkeys()
+global MainGui := ""
+global UrlText := ""
+global TopMostCheck := ""
+global StartupCheck := ""
+global ToggleHotkeyEdit := ""
+global BindHotkeyEdit := ""
+global TopMostHotkeyEdit := ""
 
-MButton::ToggleWindow()
-^!+b::BindActiveBrowserUrl()
-^!t::ToggleAlwaysOnTop()
+RegisterConfiguredHotkeys()
+MainGui := BuildMainGui()
+ConfigureTray()
+MainGui.Show()
 
-ShowStartupHelp()
+LoadHotkeys() {
+    global ConfigFile, DefaultHotkeys
 
-ShowStartupHelp() {
-    global AppName
-
-    MsgBox(
-        "PeekDock is running.`n`n"
-        . "First resize and position the Chrome window the way you want, then bind the page.`n`n"
-        . "Middle mouse: open / hide / restore the dock`n"
-        . "Ctrl + Alt + Shift + B: bind the active Chrome tab`n"
-        . "Ctrl + Alt + T: toggle always-on-top",
-        AppName
-    )
+    hotkeys := Map()
+    for action, defaultHotkey in DefaultHotkeys {
+        hotkeys[action] := IniRead(ConfigFile, "Hotkeys", action, defaultHotkey)
+    }
+    return hotkeys
 }
 
-ToggleWindow() {
+RegisterConfiguredHotkeys() {
+    global AppName, ConfiguredHotkeys
+
+    bindings := Map(
+        "ToggleDock", ToggleWindow,
+        "BindPage", BindActiveBrowserUrl,
+        "ToggleTopMost", ToggleAlwaysOnTop
+    )
+
+    for action, callback in bindings {
+        try {
+            Hotkey(ConfiguredHotkeys[action], callback, "On")
+        } catch as err {
+            MsgBox("Could not register hotkey for " action ":`n`n" err.Message, AppName)
+            return false
+        }
+    }
+    return true
+}
+
+UpdateHotkey(action, hotkeyText) {
+    global ConfigFile, ConfiguredHotkeys
+
+    hotkeyText := Trim(hotkeyText)
+    if !hotkeyText {
+        return false
+    }
+
+    oldHotkey := ConfiguredHotkeys[action]
+    callback := GetHotkeyCallback(action)
+
+    try {
+        Hotkey(oldHotkey, "Off")
+        Hotkey(hotkeyText, callback, "On")
+    } catch {
+        try {
+            Hotkey(oldHotkey, callback, "On")
+        }
+        return false
+    }
+
+    ConfiguredHotkeys[action] := hotkeyText
+    IniWrite hotkeyText, ConfigFile, "Hotkeys", action
+    return true
+}
+
+GetHotkeyCallback(action) {
+    if action = "ToggleDock" {
+        return ToggleWindow
+    }
+    if action = "BindPage" {
+        return BindActiveBrowserUrl
+    }
+    return ToggleAlwaysOnTop
+}
+
+FormatHotkeyLabel(hotkeyText) {
+    label := StrReplace(hotkeyText, "^", "Ctrl + ")
+    label := StrReplace(label, "!", "Alt + ")
+    label := StrReplace(label, "+", "Shift + ")
+    label := StrReplace(label, "MButton", "Middle Mouse")
+    return Trim(label)
+}
+
+BuildMainGui() {
+    global AppName, UrlText, TopMostCheck, StartupCheck
+    global ToggleHotkeyEdit, BindHotkeyEdit, TopMostHotkeyEdit, ConfiguredHotkeys
+
+    gui := Gui("+Resize", AppName)
+    gui.SetFont("s10", "Segoe UI")
+    gui.MarginX := 16
+    gui.MarginY := 14
+
+    gui.SetFont("s16 Bold", "Segoe UI")
+    gui.AddText("w460", AppName)
+    gui.SetFont("s9 Norm", "Segoe UI")
+    gui.AddText("w460", "Bind one Chrome page, then keep it one hotkey away.")
+    UrlText := gui.AddText("w460 r2 y+10", "")
+
+    gui.AddButton("xm y+10 w145 h30", "Bind Current Chrome Tab")
+        .OnEvent("Click", (*) => (BindActiveBrowserUrl(), RefreshMainGui()))
+    gui.AddButton("x+8 w145 h30", "Show / Hide Dock")
+        .OnEvent("Click", (*) => ToggleWindow())
+    gui.AddButton("x+8 w145 h30", "Toggle Always On Top")
+        .OnEvent("Click", (*) => (ToggleAlwaysOnTop(), RefreshMainGui()))
+
+    TopMostCheck := gui.AddCheckbox("xm y+16", "Always on top")
+    StartupCheck := gui.AddCheckbox("x+24", "Start with Windows")
+
+    gui.AddText("xm y+16 w140", "Dock hotkey")
+    ToggleHotkeyEdit := gui.AddEdit("x+8 w220", ConfiguredHotkeys["ToggleDock"])
+    gui.AddText("xm y+8 w140", "Bind hotkey")
+    BindHotkeyEdit := gui.AddEdit("x+8 w220", ConfiguredHotkeys["BindPage"])
+    gui.AddText("xm y+8 w140", "Topmost hotkey")
+    TopMostHotkeyEdit := gui.AddEdit("x+8 w220", ConfiguredHotkeys["ToggleTopMost"])
+
+    gui.AddButton("xm y+16 w120 h30", "Save").OnEvent("Click", SaveSettingsFromGui)
+    gui.AddButton("x+8 w120 h30", "Reset").OnEvent("Click", ResetConfiguration)
+    gui.AddButton("x+8 w120 h30", "Exit").OnEvent("Click", (*) => ExitApp())
+
+    gui.OnEvent("Close", (*) => gui.Hide())
+    RefreshMainGui()
+    return gui
+}
+
+RefreshMainGui() {
+    global ConfigFile, TopMost, UrlText, TopMostCheck, StartupCheck
+
+    if !IsObject(UrlText) {
+        return
+    }
+
+    url := IniRead(ConfigFile, "Target", "Url", "")
+    UrlText.Text := url ? "Bound page: " url : "No page bound yet. Open Chrome, resize it, then bind the page."
+    TopMostCheck.Value := TopMost ? 1 : 0
+    StartupCheck.Value := IsStartupEnabled() ? 1 : 0
+}
+
+SaveSettingsFromGui(*) {
+    global AppName, ConfigFile, TopMost, TopMostCheck, StartupCheck
+    global ToggleHotkeyEdit, BindHotkeyEdit, TopMostHotkeyEdit
+
+    if !UpdateHotkey("ToggleDock", ToggleHotkeyEdit.Value) {
+        MsgBox("Dock hotkey could not be saved.", AppName)
+        return
+    }
+    if !UpdateHotkey("BindPage", BindHotkeyEdit.Value) {
+        MsgBox("Bind hotkey could not be saved.", AppName)
+        return
+    }
+    if !UpdateHotkey("ToggleTopMost", TopMostHotkeyEdit.Value) {
+        MsgBox("Topmost hotkey could not be saved.", AppName)
+        return
+    }
+
+    TopMost := TopMostCheck.Value = 1
+    IniWrite TopMost ? "1" : "0", ConfigFile, "Window", "TopMost"
+    ToggleStartup(StartupCheck.Value = 1)
+    RefreshMainGui()
+    MsgBox("Settings saved.", AppName)
+}
+
+ConfigureTray() {
+    global AppName, MainGui
+
+    A_TrayMenu.Delete()
+    A_TrayMenu.Add("Show Settings", (*) => MainGui.Show())
+    A_TrayMenu.Add("Show / Hide Dock", (*) => ToggleWindow())
+    A_TrayMenu.Add("Bind Current Chrome Tab", (*) => (BindActiveBrowserUrl(), RefreshMainGui()))
+    A_TrayMenu.Add()
+    A_TrayMenu.Add("Exit", (*) => ExitApp())
+    A_TrayMenu.Default := "Show Settings"
+    A_IconTip := AppName
+}
+
+StartupShortcutPath() {
+    global AppName
+    return A_Startup "\" AppName ".lnk"
+}
+
+IsStartupEnabled() {
+    return FileExist(StartupShortcutPath()) ? true : false
+}
+
+ToggleStartup(enabled) {
+    global ConfigFile
+
+    shortcut := StartupShortcutPath()
+    if enabled {
+        FileCreateShortcut A_ScriptFullPath, shortcut, A_ScriptDir
+    } else if FileExist(shortcut) {
+        FileDelete shortcut
+    }
+    IniWrite enabled ? "1" : "0", ConfigFile, "Startup", "RunAtLogin"
+    return true
+}
+
+ResetConfiguration(*) {
+    global AppName, ConfigFile, ConfiguredHotkeys
+
+    if MsgBox("Reset PeekDock settings?", AppName, "YesNo Icon?") != "Yes" {
+        return
+    }
+    if FileExist(ConfigFile) {
+        FileDelete ConfigFile
+    }
+    ConfiguredHotkeys := LoadHotkeys()
+    MsgBox("Settings reset. Restart PeekDock to reload hotkeys cleanly.", AppName)
+    RefreshMainGui()
+}
+
+ToggleWindow(*) {
+    global AppName, ConfigFile
+
     hwnd := FindAppWindow()
 
     if hwnd {
@@ -53,7 +255,7 @@ ToggleWindow() {
     if !url {
         MsgBox(
             "No page is bound yet.`n`n"
-            . "Open the target page in Chrome, then press Ctrl + Alt + Shift + B.",
+            . "Open the target page in Chrome, resize and position it, then bind the page.",
             AppName
         )
         return
@@ -62,10 +264,12 @@ ToggleWindow() {
     LaunchAppWindow(url)
 }
 
-BindActiveBrowserUrl() {
+BindActiveBrowserUrl(*) {
+    global AppName, ConfigFile, ConfiguredHotkeys
+
     if !WinActive("ahk_exe chrome.exe") {
         MsgBox(
-            "Activate a Chrome tab first, then press Ctrl + Alt + Shift + B.",
+            "Activate a Chrome tab first, then bind the current page.",
             AppName
         )
         return
@@ -94,15 +298,16 @@ BindActiveBrowserUrl() {
     }
 
     IniWrite url, ConfigFile, "Target", "Url"
+    RefreshMainGui()
     MsgBox(
         "Bound page:`n`n" url "`n`n"
-        . "Use the middle mouse button to open or hide the dock.",
+        . "Use " FormatHotkeyLabel(ConfiguredHotkeys["ToggleDock"]) " to open or hide the dock.",
         AppName
     )
 }
 
-ToggleAlwaysOnTop() {
-    global TopMost
+ToggleAlwaysOnTop(*) {
+    global AppName, TopMost, ConfigFile
 
     hwnd := FindAppWindow()
     TopMost := !TopMost
@@ -112,11 +317,12 @@ ToggleAlwaysOnTop() {
         WinSetAlwaysOnTop(TopMost ? 1 : 0, "ahk_id " hwnd)
     }
 
+    RefreshMainGui()
     MsgBox("Always-on-top: " (TopMost ? "On" : "Off"), AppName)
 }
 
 LaunchAppWindow(url) {
-    global ProfileDir
+    global AppName, ProfileDir
 
     DirCreate ProfileDir
 
@@ -133,7 +339,7 @@ LaunchAppWindow(url) {
     } else {
         MsgBox(
             "Chrome started, but PeekDock could not find the app window yet.`n`n"
-            . "Wait a moment, then press the middle mouse button again.",
+            . "Wait a moment, then use the dock hotkey again.",
             AppName
         )
     }
@@ -163,7 +369,7 @@ WaitForAppWindow(pid, seconds) {
 }
 
 FindAppWindow() {
-    global AppWindowHwnd
+    global AppWindowHwnd, ConfigFile
 
     if AppWindowHwnd && WinExist("ahk_id " AppWindowHwnd) {
         return AppWindowHwnd
@@ -197,7 +403,7 @@ FindChromeWindowByPid(pid) {
 }
 
 RememberAppWindow(hwnd) {
-    global AppWindowHwnd
+    global AppWindowHwnd, ConfigFile
 
     AppWindowHwnd := hwnd
     IniWrite hwnd, ConfigFile, "Runtime", "Hwnd"
