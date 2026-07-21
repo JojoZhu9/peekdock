@@ -220,7 +220,7 @@ BuildMainGui() {
     UrlText := mainWindow.AddText("w460 r2 y+10", "")
 
     mainWindow.AddButton("xm y+10 w145 h30", "Bind Current Chrome Tab")
-        .OnEvent("Click", (*) => (BindActiveBrowserUrl(), RefreshMainGui()))
+        .OnEvent("Click", (*) => (BindActiveBrowserUrl(true), RefreshMainGui()))
     mainWindow.AddButton("x+8 w145 h30", "Show / Hide Dock")
         .OnEvent("Click", (*) => ToggleWindow())
     mainWindow.AddButton("x+8 w145 h30", "Toggle Always On Top")
@@ -285,7 +285,7 @@ ConfigureTray() {
     A_TrayMenu.Delete()
     A_TrayMenu.Add("Show Settings", (*) => MainGui.Show())
     A_TrayMenu.Add("Show / Hide Dock", (*) => ToggleWindow())
-    A_TrayMenu.Add("Bind Current Chrome Tab", (*) => (BindActiveBrowserUrl(), RefreshMainGui()))
+    A_TrayMenu.Add("Bind Current Chrome Tab", (*) => (BindActiveBrowserUrl(true), RefreshMainGui()))
     A_TrayMenu.Add()
     A_TrayMenu.Add("Exit", (*) => ExitApp())
     A_TrayMenu.Default := "Show Settings"
@@ -356,8 +356,20 @@ ToggleWindow(*) {
     LaunchAppWindow(url)
 }
 
-BindActiveBrowserUrl(*) {
+BindActiveBrowserUrl(activateChrome := false, *) {
     global AppName, ConfigFile, ConfiguredHotkeys
+
+    if activateChrome && !WinActive("ahk_exe chrome.exe") {
+        hwnd := FindBindableChromeWindow()
+        if hwnd {
+            WinActivate("ahk_id " hwnd)
+            if !WinWaitActive("ahk_id " hwnd,, 2) {
+                MsgBox("Chrome was found, but could not be activated. Click the Chrome tab and try again.", AppName)
+                return
+            }
+            Sleep 120
+        }
+    }
 
     if !WinActive("ahk_exe chrome.exe") {
         MsgBox(
@@ -396,6 +408,26 @@ BindActiveBrowserUrl(*) {
         . "Use " FormatHotkeyLabel(ConfiguredHotkeys["ToggleDock"]) " to open or hide the dock.",
         AppName
     )
+}
+
+FindBindableChromeWindow() {
+    global AppWindowHwnd
+
+    for hwnd in WinGetList("ahk_exe chrome.exe") {
+        if hwnd = AppWindowHwnd {
+            continue
+        }
+        try {
+            if !IsWindowVisible(hwnd) {
+                continue
+            }
+            if WinGetClass("ahk_id " hwnd) = "Chrome_WidgetWin_1" {
+                return hwnd
+            }
+        }
+    }
+
+    return 0
 }
 
 ToggleAlwaysOnTop(*) {
