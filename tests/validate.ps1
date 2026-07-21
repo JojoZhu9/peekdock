@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $scriptPath = Join-Path $root "PeekDock.ahk"
 $readmePath = Join-Path $root "README.md"
+$buildPath = Join-Path $root "scripts\build.ps1"
 
 function Assert-Contains {
     param(
@@ -36,8 +37,13 @@ if (-not (Test-Path $readmePath)) {
     throw "Missing README.md"
 }
 
+if (-not (Test-Path $buildPath)) {
+    throw "Missing scripts/build.ps1"
+}
+
 $script = Get-Content -Raw $scriptPath
 $readme = Get-Content -Raw $readmePath
+$build = Get-Content -Raw $buildPath
 
 Assert-Contains $script 'MButton::ToggleWindow\(\)' "Missing middle mouse toggle hotkey"
 Assert-Contains $script 'PeekDock' "Script should use the project name in user-facing titles"
@@ -71,5 +77,11 @@ Assert-Contains $readme 'AutoHotkey v2' "README should mention AutoHotkey v2"
 Assert-Contains $readme '# PeekDock' "README should use the project name as its title"
 Assert-Contains $readme 'Ctrl \+ Alt \+ Shift \+ B' "README should document bind hotkey"
 Assert-Contains $readme 'Chrome' "README should document Chrome usage"
+
+Assert-Contains $build 'Ahk2Exe' "Build script should compile with Ahk2Exe"
+Assert-Contains $build 'dist' "Build script should write to dist"
+Assert-Contains $build 'PeekDock.exe' "Build script should produce PeekDock.exe"
+Assert-NotContains $build 'config\.ini' "Build script should not bundle local config.ini"
+Assert-NotContains $build 'browser-profile' "Build script should not bundle browser profile data"
 
 Write-Host "Validation passed."
