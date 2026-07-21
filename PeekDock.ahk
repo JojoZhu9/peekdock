@@ -28,6 +28,7 @@ global StartupCheck := ""
 global ToggleHotkeyEdit := ""
 global BindHotkeyEdit := ""
 global TopMostHotkeyEdit := ""
+global ExitChoiceGui := ""
 
 RegisterConfiguredHotkeys()
 MainGui := BuildMainGui()
@@ -237,11 +238,38 @@ BuildMainGui() {
 
     mainWindow.AddButton("xm y+16 w120 h30", "Save").OnEvent("Click", SaveSettingsFromGui)
     mainWindow.AddButton("x+8 w120 h30", "Reset").OnEvent("Click", ResetConfiguration)
-    mainWindow.AddButton("x+8 w120 h30", "Exit").OnEvent("Click", (*) => ExitApp())
+    mainWindow.AddButton("x+8 w120 h30", "Exit").OnEvent("Click", PromptExitChoice)
 
-    mainWindow.OnEvent("Close", (*) => mainWindow.Hide())
+    mainWindow.OnEvent("Close", PromptExitChoice)
     RefreshMainGui()
     return mainWindow
+}
+
+PromptExitChoice(*) {
+    global AppName, MainGui, ExitChoiceGui
+
+    if IsObject(ExitChoiceGui) {
+        try {
+            ExitChoiceGui.Show()
+            WinActivate(ExitChoiceGui.Hwnd)
+            return true
+        }
+    }
+
+    choiceWindow := Gui("+AlwaysOnTop +ToolWindow", AppName)
+    choiceWindow.SetFont("s10", "Segoe UI")
+    choiceWindow.MarginX := 16
+    choiceWindow.MarginY := 14
+    choiceWindow.AddText("w320", "What do you want to do with PeekDock?")
+    choiceWindow.AddButton("xm y+14 w140 h32", "Minimize to Tray")
+        .OnEvent("Click", (*) => (MainGui.Hide(), choiceWindow.Destroy(), ExitChoiceGui := ""))
+    choiceWindow.AddButton("x+10 w140 h32", "Exit PeekDock")
+        .OnEvent("Click", (*) => ExitApp())
+    choiceWindow.OnEvent("Close", (*) => (choiceWindow.Destroy(), ExitChoiceGui := ""))
+
+    ExitChoiceGui := choiceWindow
+    choiceWindow.Show()
+    return true
 }
 
 RefreshMainGui() {
