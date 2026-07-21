@@ -49,6 +49,7 @@ Assert-Contains $script 'LoadHotkeys\(\)' "Script should load hotkeys from confi
 Assert-Contains $script 'RegisterConfiguredHotkeys\(\)' "Script should register configurable hotkeys"
 Assert-Contains $script 'UpdateHotkey\(action, hotkeyText\)' "Script should update hotkeys dynamically"
 Assert-Contains $script 'UpdateHotkeys\(newHotkeys\)' "Script should save all GUI hotkeys as a checked set"
+Assert-Contains $script 'CanonicalizeHotkey\(hotkeyText\)' "Script should canonicalize hotkeys before duplicate checks"
 Assert-Contains $script 'Duplicate hotkey' "Script should reject duplicate hotkeys"
 Assert-Contains $script 'Hotkey\(' "Script should use AutoHotkey v2 dynamic Hotkey registration"
 Assert-Contains $script 'BuildMainGui\(\)' "Script should build a native settings GUI"

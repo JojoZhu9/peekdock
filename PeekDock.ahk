@@ -107,7 +107,7 @@ UpdateHotkeys(newHotkeys) {
             return false
         }
 
-        normalized := StrLower(hotkeyText)
+        normalized := CanonicalizeHotkey(hotkeyText)
         if seen.Has(normalized) {
             MsgBox("Duplicate hotkey: " hotkeyText "`n`nChoose a different key for each action.", AppName)
             return false
@@ -148,6 +148,42 @@ UpdateHotkeys(newHotkeys) {
         IniWrite Trim(hotkeyText), ConfigFile, "Hotkeys", action
     }
     return true
+}
+
+CanonicalizeHotkey(hotkeyText) {
+    text := StrLower(StrReplace(Trim(hotkeyText), " ", ""))
+    pos := 1
+    flags := Map("*", false, "~", false, "$", false)
+    modifiers := Map("^", false, "!", false, "+", false, "#", false)
+
+    while pos <= StrLen(text) {
+        one := SubStr(text, pos, 1)
+        if flags.Has(one) {
+            flags[one] := true
+            pos += 1
+            continue
+        }
+        if modifiers.Has(one) {
+            modifiers[one] := true
+            pos += 1
+            continue
+        }
+        break
+    }
+
+    keyName := SubStr(text, pos)
+    canonical := ""
+    for flag in ["*", "~", "$"] {
+        if flags[flag] {
+            canonical .= flag
+        }
+    }
+    for modifier in ["^", "!", "+", "#"] {
+        if modifiers[modifier] {
+            canonical .= modifier
+        }
+    }
+    return canonical keyName
 }
 
 GetHotkeyCallback(action) {
