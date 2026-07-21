@@ -70,11 +70,3 @@ shell:startup
 ```
 
 把 `PeekDock.ahk` 的快捷方式放进去即可。
-
-## 隐私说明
-
-PeekDock 只把绑定 URL、置顶状态和窗口句柄写入本地 `config.ini`。仓库的 `.gitignore` 会排除 `config.ini` 和 `browser-profile/`，避免把个人网页地址、登录状态或浏览器配置提交到 GitHub。
-
-## 仓库名
-
-推荐 GitHub 仓库名：`peekdock`
