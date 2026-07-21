@@ -38,12 +38,13 @@ $base = $baseCandidates |
     Where-Object { $_ -and (Test-Path $_) } |
     Select-Object -First 1
 
+if (-not $base) {
+    throw "AutoHotkey v2 base executable was not found. Install AutoHotkey v2, then run scripts\build.ps1 again."
+}
+
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 
-$arguments = @("/in", $source, "/out", $output)
-if ($base) {
-    $arguments += @("/base", $base)
-}
+$arguments = @("/in", $source, "/out", $output, "/base", $base)
 
 & $compiler @arguments
 if ($LASTEXITCODE -ne 0) {

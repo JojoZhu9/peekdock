@@ -78,6 +78,11 @@ UpdateHotkey(action, hotkeyText) {
 
     try {
         Hotkey(oldHotkey, "Off")
+    } catch {
+        ; Invalid existing config should not prevent recovery through the GUI.
+    }
+
+    try {
         Hotkey(hotkeyText, callback, "On")
     } catch {
         try {
@@ -88,6 +93,60 @@ UpdateHotkey(action, hotkeyText) {
 
     ConfiguredHotkeys[action] := hotkeyText
     IniWrite hotkeyText, ConfigFile, "Hotkeys", action
+    return true
+}
+
+UpdateHotkeys(newHotkeys) {
+    global AppName
+
+    seen := Map()
+    for action, hotkeyText in newHotkeys {
+        hotkeyText := Trim(hotkeyText)
+        if !hotkeyText {
+            MsgBox("Hotkey for " action " cannot be empty.", AppName)
+            return false
+        }
+
+        normalized := StrLower(hotkeyText)
+        if seen.Has(normalized) {
+            MsgBox("Duplicate hotkey: " hotkeyText "`n`nChoose a different key for each action.", AppName)
+            return false
+        }
+        seen[normalized] := action
+    }
+
+    registered := []
+    for action, oldHotkey in ConfiguredHotkeys {
+        try {
+            Hotkey(oldHotkey, "Off")
+        }
+    }
+
+    for action, hotkeyText in newHotkeys {
+        callback := GetHotkeyCallback(action)
+        try {
+            Hotkey(Trim(hotkeyText), callback, "On")
+            registered.Push(action)
+        } catch {
+            for registeredAction in registered {
+                try {
+                    Hotkey(Trim(newHotkeys[registeredAction]), "Off")
+                }
+            }
+            for oldAction, oldHotkey in ConfiguredHotkeys {
+                try {
+                    Hotkey(oldHotkey, GetHotkeyCallback(oldAction), "On")
+                }
+            }
+            MsgBox("Hotkey for " action " could not be saved.", AppName)
+            return false
+        }
+    }
+
+    for action, hotkeyText in newHotkeys {
+        ConfiguredHotkeys[action] := Trim(hotkeyText)
+        IniWrite Trim(hotkeyText), ConfigFile, "Hotkeys", action
+    }
     return true
 }
 
@@ -167,16 +226,13 @@ SaveSettingsFromGui(*) {
     global AppName, ConfigFile, TopMost, TopMostCheck, StartupCheck
     global ToggleHotkeyEdit, BindHotkeyEdit, TopMostHotkeyEdit
 
-    if !UpdateHotkey("ToggleDock", ToggleHotkeyEdit.Value) {
-        MsgBox("Dock hotkey could not be saved.", AppName)
-        return
-    }
-    if !UpdateHotkey("BindPage", BindHotkeyEdit.Value) {
-        MsgBox("Bind hotkey could not be saved.", AppName)
-        return
-    }
-    if !UpdateHotkey("ToggleTopMost", TopMostHotkeyEdit.Value) {
-        MsgBox("Topmost hotkey could not be saved.", AppName)
+    newHotkeys := Map(
+        "ToggleDock", ToggleHotkeyEdit.Value,
+        "BindPage", BindHotkeyEdit.Value,
+        "ToggleTopMost", TopMostHotkeyEdit.Value
+    )
+
+    if !UpdateHotkeys(newHotkeys) {
         return
     }
 
@@ -327,10 +383,20 @@ LaunchAppWindow(url) {
     DirCreate ProfileDir
 
     chromePath := FindChromePath()
+    if !chromePath {
+        MsgBox("Chrome cannot be found. Install Google Chrome, then try again.", AppName)
+        return
+    }
+
     safeUrl := StrReplace(url, '"', "%22")
     command := '"' chromePath '" --user-data-dir="' ProfileDir '" --app="' safeUrl '"'
 
-    Run(command,,, &pid)
+    try {
+        Run(command,,, &pid)
+    } catch as err {
+        MsgBox("Chrome could not be started:`n`n" err.Message, AppName)
+        return
+    }
 
     hwnd := WaitForAppWindow(pid, 8)
     if hwnd {
@@ -431,5 +497,12 @@ FindChromePath() {
         }
     }
 
-    return "chrome.exe"
+    try {
+        pathFromShell := RegRead("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe", "")
+        if pathFromShell && FileExist(pathFromShell) {
+            return pathFromShell
+        }
+    }
+
+    return ""
 }

@@ -48,6 +48,8 @@ Assert-Contains $script 'PeekDock' "Script should use the project name in user-f
 Assert-Contains $script 'LoadHotkeys\(\)' "Script should load hotkeys from config.ini"
 Assert-Contains $script 'RegisterConfiguredHotkeys\(\)' "Script should register configurable hotkeys"
 Assert-Contains $script 'UpdateHotkey\(action, hotkeyText\)' "Script should update hotkeys dynamically"
+Assert-Contains $script 'UpdateHotkeys\(newHotkeys\)' "Script should save all GUI hotkeys as a checked set"
+Assert-Contains $script 'Duplicate hotkey' "Script should reject duplicate hotkeys"
 Assert-Contains $script 'Hotkey\(' "Script should use AutoHotkey v2 dynamic Hotkey registration"
 Assert-Contains $script 'BuildMainGui\(\)' "Script should build a native settings GUI"
 Assert-Contains $script 'RefreshMainGui\(\)' "Script should refresh GUI state after actions"
@@ -63,6 +65,7 @@ Assert-NotContains $script '^MButton::ToggleWindow\(\)' "Toggle hotkey should be
 Assert-NotContains $script '\^!b::ToggleWindow\(\)' "Ctrl+Alt+B should no longer toggle the app window"
 Assert-NotContains $script 'ShowStartupHelp\(\)' "Startup should use the main GUI instead of a help-only message box"
 Assert-Contains $script 'chrome\.exe' "Script should target Chrome"
+Assert-Contains $script 'Chrome cannot be found' "Script should show a clear message when Chrome is missing"
 Assert-Contains $script '--app="' "Script should launch Chrome as an app window"
 Assert-Contains $script '--user-data-dir="' "Script should use a dedicated Chrome profile"
 Assert-Contains $script 'config\.ini' "Script should persist the bound URL in config.ini"
@@ -132,9 +135,25 @@ Assert-NotContains $readme $mojibakePattern "README should not contain mojibake 
 Assert-NotContains $troubleshooting $mojibakePattern "Troubleshooting should not contain mojibake or replacement characters"
 
 Assert-Contains $build 'Ahk2Exe' "Build script should compile with Ahk2Exe"
+Assert-Contains $build 'AutoHotkey v2 base executable was not found' "Build script should require an AutoHotkey v2 base executable"
 Assert-Contains $build 'dist' "Build script should write to dist"
 Assert-Contains $build 'PeekDock.exe' "Build script should produce PeekDock.exe"
 Assert-NotContains $build 'config\.ini' "Build script should not bundle local config.ini"
 Assert-NotContains $build 'browser-profile' "Build script should not bundle browser profile data"
+
+$ahkCandidates = @(
+    "$env:LOCALAPPDATA\Programs\AutoHotkey\v2\AutoHotkey64.exe",
+    "$env:ProgramFiles\AutoHotkey\v2\AutoHotkey64.exe",
+    "${env:ProgramFiles(x86)}\AutoHotkey\v2\AutoHotkey64.exe"
+)
+$ahk = $ahkCandidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+if ($ahk) {
+    & $ahk /ErrorStdOut /Validate $scriptPath
+    if (-not $?) {
+        throw "AutoHotkey /Validate failed"
+    }
+} else {
+    Write-Host "AutoHotkey v2 not found; skipped /Validate."
+}
 
 Write-Host "Validation passed."
