@@ -1,0 +1,12 @@
+# Local runtime state
+config.ini
+browser-profile/
+
+# AutoHotkey generated artifacts
+*.exe
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
