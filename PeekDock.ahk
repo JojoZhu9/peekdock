@@ -458,6 +458,7 @@ LaunchAppWindow(url) {
 
     safeUrl := StrReplace(url, '"', "%22")
     command := '"' chromePath '" --user-data-dir="' ProfileDir '" --app="' safeUrl '"'
+    existingWindows := GetChromeWindowSnapshot()
 
     try {
         Run(command,,, &pid)
@@ -466,7 +467,7 @@ LaunchAppWindow(url) {
         return
     }
 
-    hwnd := WaitForAppWindow(pid, 8)
+    hwnd := WaitForAppWindow(pid, existingWindows, 8)
     if hwnd {
         RememberAppWindow(hwnd)
         RestoreAppWindow(hwnd)
@@ -488,15 +489,45 @@ RestoreAppWindow(hwnd) {
     WinActivate("ahk_id " hwnd)
 }
 
-WaitForAppWindow(pid, seconds) {
+WaitForAppWindow(pid, existingWindows, seconds) {
     deadline := A_TickCount + seconds * 1000
 
     while A_TickCount < deadline {
+        hwnd := FindNewChromeWindow(existingWindows)
+        if hwnd {
+            return hwnd
+        }
+
         hwnd := FindChromeWindowByPid(pid)
         if hwnd {
             return hwnd
         }
         Sleep 150
+    }
+
+    return 0
+}
+
+GetChromeWindowSnapshot() {
+    snapshot := Map()
+    for hwnd in WinGetList("ahk_exe chrome.exe") {
+        snapshot[hwnd] := true
+    }
+    return snapshot
+}
+
+FindNewChromeWindow(existingWindows) {
+    for hwnd in WinGetList("ahk_exe chrome.exe") {
+        if existingWindows.Has(hwnd) {
+            continue
+        }
+        try {
+            title := WinGetTitle("ahk_id " hwnd)
+            className := WinGetClass("ahk_id " hwnd)
+            if title && className = "Chrome_WidgetWin_1" {
+                return hwnd
+            }
+        }
     }
 
     return 0

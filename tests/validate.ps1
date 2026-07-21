@@ -86,6 +86,8 @@ Assert-NotContains $script 'WinSetAlwaysOnTop\([^,\r\n]*"Off"' 'AutoHotkey v2 Wi
 Assert-NotContains $script 'WinMove\(' "Restoring the app window should keep its previous size and position"
 Assert-Contains $script 'Runtime' "Script should persist the app window handle at runtime"
 Assert-Contains $script 'FindChromeWindowByPid' "Script should find the app window from the launch PID"
+Assert-Contains $script 'GetChromeWindowSnapshot\(\)' "Script should snapshot existing Chrome windows before launching the dock"
+Assert-Contains $script 'FindNewChromeWindow\(existingWindows\)' "Script should find a newly opened Chrome app window even when Chrome reuses a process"
 Assert-NotContains $script 'GetProcessCommandLine' "Hotkey path should not depend on slow WMI command-line scanning"
 Assert-NotContains $script 'ComObjGet\("winmgmts:"\)' "Hotkey path should not use WMI"
 Assert-NotContains $script 'A_LocalAppData' "A_LocalAppData is not an AutoHotkey v2 built-in variable"
