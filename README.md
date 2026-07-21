@@ -1,5 +1,9 @@
 # PeekDock
 
+<p align="center">
+  <img src="assets/peekdock-logo-readme.png" alt="PeekDock logo" width="128">
+</p>
+
 PeekDock is a lightweight Windows utility that turns one existing Chrome window into a quick hide/restore dock. It binds the active Chrome tab and preserves that same window, page state, playback position, and form state.
 
 ## Features
@@ -11,6 +15,7 @@ PeekDock is a lightweight Windows utility that turns one existing Chrome window 
 - Toggle always-on-top.
 - Start with Windows.
 - Build a standalone exe with AutoHotkey v2.
+- Uses a custom PeekDock icon for the app window, tray, shortcuts, and README.
 
 ## Quick Start
 

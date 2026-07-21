@@ -13,6 +13,8 @@ DetectHiddenWindows True
 
 global AppName := "PeekDock"
 global ConfigFile := A_ScriptDir "\config.ini"
+global IconFile := ResolveIconFile()
+global IconHandles := []
 global TopMost := IniRead(ConfigFile, "Window", "TopMost", "1") = "1"
 global AppWindowHwnd := Integer(IniRead(ConfigFile, "Runtime", "Hwnd", "0"))
 global DefaultHotkeys := Map(
@@ -31,9 +33,54 @@ global TopMostHotkeyEdit := ""
 global ExitChoiceGui := ""
 
 RegisterConfiguredHotkeys()
+ApplyAppIcon()
 MainGui := BuildMainGui()
 ConfigureTray()
 MainGui.Show()
+
+ResolveIconFile() {
+    candidates := [
+        A_ScriptDir "\peekdock.ico",
+        A_ScriptDir "\assets\peekdock.ico"
+    ]
+
+    for path in candidates {
+        if FileExist(path) {
+            return path
+        }
+    }
+    return ""
+}
+
+ApplyAppIcon() {
+    global IconFile
+
+    if IconFile {
+        try {
+            TraySetIcon(IconFile)
+        }
+    }
+}
+
+ApplyWindowIcon(hwnd) {
+    global IconFile, IconHandles
+
+    if !IconFile {
+        return
+    }
+
+    bigIcon := DllCall("LoadImage", "Ptr", 0, "Str", IconFile, "UInt", 1, "Int", 32, "Int", 32, "UInt", 0x10, "Ptr")
+    smallIcon := DllCall("LoadImage", "Ptr", 0, "Str", IconFile, "UInt", 1, "Int", 16, "Int", 16, "UInt", 0x10, "Ptr")
+
+    if bigIcon {
+        SendMessage(0x80, 1, bigIcon,, "ahk_id " hwnd)
+        IconHandles.Push(bigIcon)
+    }
+    if smallIcon {
+        SendMessage(0x80, 0, smallIcon,, "ahk_id " hwnd)
+        IconHandles.Push(smallIcon)
+    }
+}
 
 LoadHotkeys() {
     global ConfigFile, DefaultHotkeys
@@ -241,6 +288,7 @@ BuildMainGui() {
     mainWindow.AddButton("x+8 w120 h30", "Exit").OnEvent("Click", PromptExitChoice)
 
     mainWindow.OnEvent("Close", PromptExitChoice)
+    ApplyWindowIcon(mainWindow.Hwnd)
     RefreshMainGui()
     return mainWindow
 }
@@ -268,6 +316,7 @@ PromptExitChoice(*) {
     choiceWindow.OnEvent("Close", (*) => (choiceWindow.Destroy(), ExitChoiceGui := ""))
 
     ExitChoiceGui := choiceWindow
+    ApplyWindowIcon(choiceWindow.Hwnd)
     choiceWindow.Show()
     return true
 }

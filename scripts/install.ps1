@@ -4,7 +4,9 @@ $appName = "PeekDock"
 $sourceDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $installDir = Join-Path $env:LOCALAPPDATA $appName
 $scriptSource = Join-Path $sourceDir "PeekDock.ahk"
+$iconSource = Join-Path $sourceDir "peekdock.ico"
 $scriptTarget = Join-Path $installDir "PeekDock.ahk"
+$iconTarget = Join-Path $installDir "peekdock.ico"
 
 function Show-Message {
     param(
@@ -95,6 +97,9 @@ try {
 
     New-Item -ItemType Directory -Force -Path $installDir | Out-Null
     Copy-Item -LiteralPath $scriptSource -Destination $scriptTarget -Force
+    if (Test-Path $iconSource) {
+        Copy-Item -LiteralPath $iconSource -Destination $iconTarget -Force
+    }
 
     $shell = New-Object -ComObject WScript.Shell
     $desktop = [Environment]::GetFolderPath("DesktopDirectory")
@@ -109,7 +114,7 @@ try {
         $shortcut.TargetPath = $ahk
         $shortcut.Arguments = '"' + $scriptTarget + '"'
         $shortcut.WorkingDirectory = $installDir
-        $shortcut.IconLocation = "$ahk,0"
+        $shortcut.IconLocation = if (Test-Path $iconTarget) { "$iconTarget,0" } else { "$ahk,0" }
         $shortcut.Save()
     }
 

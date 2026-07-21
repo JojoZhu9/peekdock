@@ -2,6 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $source = Join-Path $root "PeekDock.ahk"
+$icon = Join-Path $root "assets\peekdock.ico"
 $dist = Join-Path $root "dist"
 $output = Join-Path $dist "PeekDock.exe"
 
@@ -45,6 +46,9 @@ if (-not $base) {
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 
 $arguments = @("/in", $source, "/out", $output, "/base", $base)
+if (Test-Path $icon) {
+    $arguments += @("/icon", $icon)
+}
 
 & $compiler @arguments
 if ($LASTEXITCODE -ne 0) {

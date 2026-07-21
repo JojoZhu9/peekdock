@@ -22,6 +22,7 @@ New-Item -ItemType Directory -Force -Path $payload | Out-Null
 
 Copy-Item -LiteralPath (Join-Path $root "PeekDock.ahk") -Destination (Join-Path $payload "PeekDock.ahk") -Force
 Copy-Item -LiteralPath (Join-Path $root "scripts\install.ps1") -Destination (Join-Path $payload "install.ps1") -Force
+Copy-Item -LiteralPath (Join-Path $root "assets\peekdock.ico") -Destination (Join-Path $payload "peekdock.ico") -Force
 
 $sedContent = @"
 [Version]
@@ -51,9 +52,11 @@ SourceFiles0=$payload\
 [SourceFiles0]
 %FILE0%=PeekDock.ahk
 %FILE1%=install.ps1
+%FILE2%=peekdock.ico
 [Strings]
 FILE0="PeekDock.ahk"
 FILE1="install.ps1"
+FILE2="peekdock.ico"
 "@
 
 Set-Content -LiteralPath $sed -Value $sedContent -Encoding ASCII

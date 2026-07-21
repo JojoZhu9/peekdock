@@ -8,6 +8,8 @@ $buildInstallerPath = Join-Path $root "scripts\build-installer.ps1"
 $installPath = Join-Path $root "scripts\install.ps1"
 $troubleshootingPath = Join-Path $root "docs\troubleshooting.md"
 $configExamplePath = Join-Path $root "config.example.ini"
+$iconPath = Join-Path $root "assets\peekdock.ico"
+$logoPath = Join-Path $root "assets\peekdock-logo-readme.png"
 
 function Assert-Contains {
     param(
@@ -33,7 +35,7 @@ function Assert-NotContains {
     }
 }
 
-foreach ($path in @($scriptPath, $readmePath, $buildPath, $buildInstallerPath, $installPath, $troubleshootingPath, $configExamplePath)) {
+foreach ($path in @($scriptPath, $readmePath, $buildPath, $buildInstallerPath, $installPath, $troubleshootingPath, $configExamplePath, $iconPath, $logoPath)) {
     if (-not (Test-Path $path)) {
         throw "Missing $path"
     }
@@ -49,6 +51,9 @@ $configExample = Get-Content -Raw -Encoding UTF8 $configExamplePath
 $chineseSupplementHeading = "## " + [string][char]0x4E2D + [string][char]0x6587 + [string][char]0x8865 + [string][char]0x5145
 
 Assert-Contains $script 'PeekDock' "Script should use the project name in user-facing titles"
+Assert-Contains $script 'ResolveIconFile\(\)' "Script should resolve the custom PeekDock icon"
+Assert-Contains $script 'TraySetIcon\(IconFile\)' "Script should use the custom icon for the tray"
+Assert-Contains $script 'ApplyWindowIcon\(mainWindow\.Hwnd\)' "Script should apply the custom icon to the main window"
 Assert-Contains $script 'LoadHotkeys\(\)' "Script should load hotkeys from config.ini"
 Assert-Contains $script 'RegisterConfiguredHotkeys\(\)' "Script should register configurable hotkeys"
 Assert-Contains $script 'UpdateHotkey\(action, hotkeyText\)' "Script should update hotkeys dynamically"
@@ -101,6 +106,7 @@ Assert-Contains $configExample 'ToggleTopMost=\^!t' "Config example should inclu
 Assert-Contains $configExample '\[Startup\]' "Config example should include a Startup section"
 
 Assert-Contains $readme '# PeekDock' "README should use the project name as its title"
+Assert-Contains $readme 'assets/peekdock-logo-readme\.png' "README should show the custom logo"
 Assert-Contains $readme 'AutoHotkey v2' "README should mention AutoHotkey v2"
 Assert-Contains $readme 'Chrome' "README should document Chrome usage"
 Assert-Contains $readme '## Features' "README should include Features"
@@ -150,13 +156,16 @@ Assert-Contains $build 'Ahk2Exe' "Build script should compile with Ahk2Exe"
 Assert-Contains $build 'AutoHotkey v2 base executable was not found' "Build script should require an AutoHotkey v2 base executable"
 Assert-Contains $build 'dist' "Build script should write to dist"
 Assert-Contains $build 'PeekDock.exe' "Build script should produce PeekDock.exe"
+Assert-Contains $build '/icon' "Build script should use the custom icon when compiling an exe"
 Assert-NotContains $build 'config\.ini' "Build script should not bundle local config.ini"
 Assert-NotContains $build 'browser-profile' "Build script should not bundle browser profile data"
 
 Assert-Contains $buildInstaller 'PeekDock-Setup.exe' "Installer build script should produce PeekDock-Setup.exe"
 Assert-Contains $buildInstaller 'iexpress.exe' "Installer build script should use the Windows IExpress packager"
+Assert-Contains $buildInstaller 'peekdock\.ico' "Installer build script should bundle the custom icon"
 Assert-Contains $install 'AutoHotkey.AutoHotkey' "Installer should install AutoHotkey v2 when missing"
 Assert-Contains $install 'Google.Chrome' "Installer should install Chrome when missing"
+Assert-Contains $install 'peekdock\.ico' "Installer should install the custom icon"
 Assert-Contains $install 'DesktopDirectory' "Installer should create a Desktop shortcut"
 
 $ahkCandidates = @(
