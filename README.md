@@ -1,5 +1,9 @@
 # PeekDock
 
+![Platform](https://img.shields.io/badge/platform-Windows-0078D4)
+![AutoHotkey](https://img.shields.io/badge/AutoHotkey-v2-334455)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 PeekDock 是一个基于 AutoHotkey v2 的 Chrome 专用网页小窗工具。它把你选定的网页变成一个独立 Chrome 应用窗口，并用鼠标中键快速打开、隐藏或恢复，不影响其他浏览器窗口。
 
 ## 适合什么场景
@@ -22,6 +26,15 @@ PeekDock 是一个基于 AutoHotkey v2 的 Chrome 专用网页小窗工具。它
 - Windows
 - Google Chrome
 - [AutoHotkey v2](https://www.autohotkey.com/)
+
+## 下载
+
+当前项目是单文件脚本工具。下载仓库后直接运行 `PeekDock.ahk` 即可。
+
+```powershell
+git clone https://github.com/JojoZhu9/peekdock.git
+cd peekdock
+```
 
 ## 快速开始
 
@@ -70,3 +83,27 @@ shell:startup
 ```
 
 把 `PeekDock.ahk` 的快捷方式放进去即可。
+
+## 常见问题
+
+### 鼠标中键没有反应
+
+确认 `PeekDock.ahk` 正在运行。AutoHotkey 脚本运行后，Windows 托盘区域会出现 AutoHotkey 图标。
+
+### 绑定错页面了怎么办
+
+打开新的目标页面，重新按 `Ctrl + Alt + Shift + B` 绑定即可。
+
+### 想恢复默认状态怎么办
+
+退出脚本后删除本地 `config.ini`，再重新运行 `PeekDock.ahk`。
+
+更多排查见 [Troubleshooting](docs/troubleshooting.md)。
+
+## 隐私说明
+
+PeekDock 只把绑定 URL、置顶状态和窗口句柄写入本地 `config.ini`。仓库的 `.gitignore` 会排除 `config.ini` 和 `browser-profile/`，避免把个人网页地址、登录状态或浏览器配置提交到 GitHub。
+
+## License
+
+MIT
