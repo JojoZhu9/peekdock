@@ -62,6 +62,7 @@ Assert-Contains $script 'SaveSettingsFromGui\(\*\)' "Script should save GUI sett
 Assert-Contains $script 'ConfigureTray\(\)' "Script should configure a tray menu"
 Assert-Contains $script 'ToggleStartup\(enabled\)' "Script should support startup-at-login"
 Assert-Contains $script 'Gui\(' "Script should use AutoHotkey native GUI"
+Assert-NotContains $script 'gui := Gui\(' "Script should not shadow the AutoHotkey Gui constructor with a local gui variable"
 Assert-Contains $script 'A_TrayMenu' "Script should expose tray actions"
 Assert-Contains $script 'Bind Current Chrome Tab' "Script should expose the bind action in the GUI"
 Assert-Contains $script 'Show / Hide Dock' "Script should expose the dock toggle action in the GUI"

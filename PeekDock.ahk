@@ -208,41 +208,41 @@ BuildMainGui() {
     global AppName, UrlText, TopMostCheck, StartupCheck
     global ToggleHotkeyEdit, BindHotkeyEdit, TopMostHotkeyEdit, ConfiguredHotkeys
 
-    gui := Gui("+Resize", AppName)
-    gui.SetFont("s10", "Segoe UI")
-    gui.MarginX := 16
-    gui.MarginY := 14
+    mainWindow := Gui("+Resize", AppName)
+    mainWindow.SetFont("s10", "Segoe UI")
+    mainWindow.MarginX := 16
+    mainWindow.MarginY := 14
 
-    gui.SetFont("s16 Bold", "Segoe UI")
-    gui.AddText("w460", AppName)
-    gui.SetFont("s9 Norm", "Segoe UI")
-    gui.AddText("w460", "Bind one Chrome page, then keep it one hotkey away.")
-    UrlText := gui.AddText("w460 r2 y+10", "")
+    mainWindow.SetFont("s16 Bold", "Segoe UI")
+    mainWindow.AddText("w460", AppName)
+    mainWindow.SetFont("s9 Norm", "Segoe UI")
+    mainWindow.AddText("w460", "Bind one Chrome page, then keep it one hotkey away.")
+    UrlText := mainWindow.AddText("w460 r2 y+10", "")
 
-    gui.AddButton("xm y+10 w145 h30", "Bind Current Chrome Tab")
+    mainWindow.AddButton("xm y+10 w145 h30", "Bind Current Chrome Tab")
         .OnEvent("Click", (*) => (BindActiveBrowserUrl(), RefreshMainGui()))
-    gui.AddButton("x+8 w145 h30", "Show / Hide Dock")
+    mainWindow.AddButton("x+8 w145 h30", "Show / Hide Dock")
         .OnEvent("Click", (*) => ToggleWindow())
-    gui.AddButton("x+8 w145 h30", "Toggle Always On Top")
+    mainWindow.AddButton("x+8 w145 h30", "Toggle Always On Top")
         .OnEvent("Click", (*) => (ToggleAlwaysOnTop(), RefreshMainGui()))
 
-    TopMostCheck := gui.AddCheckbox("xm y+16", "Always on top")
-    StartupCheck := gui.AddCheckbox("x+24", "Start with Windows")
+    TopMostCheck := mainWindow.AddCheckbox("xm y+16", "Always on top")
+    StartupCheck := mainWindow.AddCheckbox("x+24", "Start with Windows")
 
-    gui.AddText("xm y+16 w140", "Dock hotkey")
-    ToggleHotkeyEdit := gui.AddEdit("x+8 w220", ConfiguredHotkeys["ToggleDock"])
-    gui.AddText("xm y+8 w140", "Bind hotkey")
-    BindHotkeyEdit := gui.AddEdit("x+8 w220", ConfiguredHotkeys["BindPage"])
-    gui.AddText("xm y+8 w140", "Topmost hotkey")
-    TopMostHotkeyEdit := gui.AddEdit("x+8 w220", ConfiguredHotkeys["ToggleTopMost"])
+    mainWindow.AddText("xm y+16 w140", "Dock hotkey")
+    ToggleHotkeyEdit := mainWindow.AddEdit("x+8 w220", ConfiguredHotkeys["ToggleDock"])
+    mainWindow.AddText("xm y+8 w140", "Bind hotkey")
+    BindHotkeyEdit := mainWindow.AddEdit("x+8 w220", ConfiguredHotkeys["BindPage"])
+    mainWindow.AddText("xm y+8 w140", "Topmost hotkey")
+    TopMostHotkeyEdit := mainWindow.AddEdit("x+8 w220", ConfiguredHotkeys["ToggleTopMost"])
 
-    gui.AddButton("xm y+16 w120 h30", "Save").OnEvent("Click", SaveSettingsFromGui)
-    gui.AddButton("x+8 w120 h30", "Reset").OnEvent("Click", ResetConfiguration)
-    gui.AddButton("x+8 w120 h30", "Exit").OnEvent("Click", (*) => ExitApp())
+    mainWindow.AddButton("xm y+16 w120 h30", "Save").OnEvent("Click", SaveSettingsFromGui)
+    mainWindow.AddButton("x+8 w120 h30", "Reset").OnEvent("Click", ResetConfiguration)
+    mainWindow.AddButton("x+8 w120 h30", "Exit").OnEvent("Click", (*) => ExitApp())
 
-    gui.OnEvent("Close", (*) => gui.Hide())
+    mainWindow.OnEvent("Close", (*) => mainWindow.Hide())
     RefreshMainGui()
-    return gui
+    return mainWindow
 }
 
 RefreshMainGui() {
